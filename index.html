@@ -271,6 +271,47 @@
                         <p id="result-suggestion" class="text-brand-700 leading-relaxed"></p>
                     </div>
 
+                    <!-- ============================== BREAKDOWN ============================== -->
+                    <div class="border border-brand-100 rounded-xl overflow-hidden">
+                        <button id="btn-toggle-breakdown" type="button"
+                            class="w-full flex items-center justify-between gap-4 px-5 sm:px-6 py-4 bg-brand-50 hover:bg-brand-100 transition text-left">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                                <div>
+                                    <p class="font-bold text-brand-900">Omkostnings-breakdown</p>
+                                    <p class="text-xs text-brand-500">Se hvor besparelserne ligger og hvordan vi regner</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <p class="hidden sm:block text-sm font-semibold text-accent-600"><span id="breakdown-total">0</span> kr/md</p>
+                                <svg id="breakdown-chevron" class="w-5 h-5 text-brand-600 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                            </div>
+                        </button>
+                        <div id="breakdown-body" class="hidden">
+                            <div id="breakdown-list" class="divide-y divide-brand-100"></div>
+                            <div class="flex items-center justify-between gap-4 px-5 sm:px-6 py-4 bg-brand-900 text-white">
+                                <div>
+                                    <p class="text-xs uppercase tracking-wider text-brand-300">Samlet anslået tab</p>
+                                    <p class="text-xs text-brand-400">Per måned · mid-size værksted (4–6 svende)</p>
+                                </div>
+                                <p class="text-2xl font-extrabold"><span id="breakdown-total-2">0</span> kr</p>
+                            </div>
+                            <p class="px-5 sm:px-6 py-3 text-xs text-brand-500 bg-brand-50/50 border-t border-brand-100">
+                                Tallene er estimater baseret på branche-benchmark for danske autolakværksteder. Faktiske besparelser afhænger af din volumen, lønsum og kabinedrift – de præcise tal beregner vi sammen i gennemgangen.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- ============================== KUNDECASES ============================== -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <svg class="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                            <h3 class="text-lg font-bold text-brand-900">Kundecases – sådan ser potentialet ud i praksis</h3>
+                        </div>
+                        <p class="text-sm text-brand-500 mb-4">Klik på et case for at se hele forløbet.</p>
+                        <div id="case-list" class="space-y-3"></div>
+                    </div>
+
                     <div class="bg-gradient-to-br from-brand-50 to-accent-50 border border-accent-100 rounded-xl p-6 sm:p-8">
                         <p id="result-cta-text" class="text-brand-800 leading-relaxed mb-5"></p>
                         <a id="result-cta-btn" href="#" target="_blank" rel="noopener"
@@ -401,6 +442,82 @@
                 finance: 'Flot! Du driver en sund forretning med høj LEAN-standard. Dine optimeringsmuligheder ligger i de små marginaler, som kan øge din konkurrenceevne, når du byder på store flåde- og forsikringsaftaler.',
                 suggestion: 'Fokusér på fuldautomatisk lagerstyring (VMI) og grøn dokumentation af dit CO2-aftryk per lakering – det bliver et lovkrav og et vigtigt salgsparameter i fremtiden.',
                 ctaText: 'Som frontløber inviterer vi dig til en strategisk dialog om, hvordan du bruger dine procesdata til at vinde større markedsandele.',
+            },
+        ];
+
+        // ---------- COST BREAKDOWN MODEL ----------
+        // Per-question monthly DKK loss for each "gap-point" away from optimum (3 points).
+        // gap = 3 - userPoints -> monthlyLoss = gap * lossPerGap
+        // Benchmark: mid-size dansk autolakværksted, 4-6 svende.
+        const BREAKDOWN = [
+            { // Q1
+                label: 'Lagerstyring',
+                lossPerGap: 2000,
+                calc: 'Manuelt lager fører typisk til 5–8% materiale-svind og overlager af lak/hærder. Ved et månedligt materialeforbrug på ca. 50.000 kr svarer det til 2.000–4.000 kr/md i unødigt spild.',
+            },
+            { // Q2
+                label: 'Tidsregistrering',
+                lossPerGap: 3000,
+                calc: 'Uden live procestid mistes typisk 15–30 min/svend/dag som ufaktureret tid. 5 svende × 20 min × 20 dage × 450 kr/t ≈ 6.000 kr/md i tabt fakturerbar tid.',
+            },
+            { // Q3
+                label: 'Energi i kabinen',
+                lossPerGap: 2500,
+                calc: 'Standard kabinedrift bruger 30–40% mere energi end optimeret low-bake/puljet drift. Ved en månedlig kabineregning på ~12.000 kr giver det 2.500–5.000 kr/md i overforbrug.',
+            },
+            { // Q4
+                label: 'Fejl & om-arbejde',
+                lossPerGap: 3500,
+                calc: 'Om-arbejde uden systematisk årsagsanalyse koster typisk 3–5% af lønsummen. Ved 5 svende (≈150.000 kr lønsum/md) er det 4.500–7.500 kr/md i skjult tab.',
+            },
+            { // Q5
+                label: 'Dokumentation & forsikring',
+                lossPerGap: 2250,
+                calc: 'Manuel forsikrings-dokumentation tager typisk 20 min/sag. Ved 60 sager/md = 20 t × 450 kr ≈ 9.000 kr i admin-tid – integreret flow halverer dette.',
+            },
+            { // Q6
+                label: 'Værktøj & 5S-organisering',
+                lossPerGap: 1750,
+                calc: 'Uden 5S-standard bruger svendene gennemsnitligt 10–15 min/dag på at lede efter udstyr. 5 svende × 12 min × 20 dage × 450 kr/t ≈ 3.500 kr/md i søgetid.',
+            },
+            { // Q7
+                label: 'Tilbud & pipeline',
+                lossPerGap: 2500,
+                calc: 'Manuel opfølgning betyder, at 15–20% af tilbud aldrig lukkes. Ved 30 tilbud/md × 5.000 kr i tabt dækningsbidrag pr. mistet ordre = 5.000 kr/md per gap-trin.',
+            },
+        ];
+
+        // ---------- CUSTOMER CASES ----------
+        const CASES = [
+            {
+                id: 'autolak-vest',
+                company: 'AutoLak Vest A/S',
+                segment: 'Skadecenter · 6 svende · Jylland',
+                journey: 'Fra "Den Traditionelle Lakmester" → "Den Digitale Udfordrer"',
+                accent: 'Sparede 240.000 kr/år',
+                challenge: 'Manuel lagerstyring og papirbaserede timesedler. Værkstedet tabte ca. 12.000 kr/md per svend på spildtid, og materialesvind på lak/hærder lå på 7%.',
+                solution: 'Indførte digital stregkode-styret lagerstyring fra SPS samt live procestid via ProcessManager-skærme på hver arbejdsstation. Svendene ser nu egne KPI\'er i realtid.',
+                result: '18% reduktion i spildtid på de første 3 måneder, materialesvind faldt fra 7% til 2,1%, og 240.000 kr/år i øget dækningsbidrag. ROI på investeringen var 4 måneder.',
+                metrics: [
+                    { label: 'Spildtid', value: '−18%' },
+                    { label: 'Materialesvind', value: '−70%' },
+                    { label: 'Årligt DB-løft', value: '+240.000 kr' },
+                ],
+            },
+            {
+                id: 'skadecenter-ost',
+                company: 'Skadecenter Øst',
+                segment: 'Forsikringspartner · 12 svende · Sjælland',
+                journey: 'Fra "Den Digitale Udfordrer" → "Det Fremtidssikrede Skadecenter"',
+                accent: '+4,2 procentpoint overskudsgrad',
+                challenge: 'Data-øer mellem laksystem, planlægning og forsikrings-dokumentation skabte dobbeltarbejde. Kabinedriften var ikke puljet, og opfølgning på store flådeaftaler var ad-hoc.',
+                solution: 'Fuld integration mellem ProcessManager, low-bake laksystem og forsikringsplatformene. Automatiseret CO2-dokumentation per lakering blev klargjort til kommende lovkrav.',
+                result: '22% større kabinekapacitet uden nyansættelser, vandt 2 nye flådeaftaler i 2024, og overskudsgraden steg fra 8,1% til 12,3% på 14 måneder.',
+                metrics: [
+                    { label: 'Kabinekapacitet', value: '+22%' },
+                    { label: 'Nye flådeaftaler', value: '2 stk' },
+                    { label: 'Overskudsgrad', value: '+4,2 pp' },
+                ],
             },
         ];
 
@@ -544,10 +661,157 @@
             const pct = Math.round((score / 21) * 100);
             setTimeout(() => { $('result-bar').style.width = pct + '%'; }, 100);
 
+            // Render the cost breakdown + customer cases
+            renderBreakdown();
+            renderCases();
+
             // Log result + (optional) webhook hand-off
             logResult(score, cat);
 
             showScreen('results');
+        }
+
+        // ---------- BREAKDOWN RENDERING ----------
+        function formatDKK(n) {
+            return n.toLocaleString('da-DK');
+        }
+
+        function renderBreakdown() {
+            const list = $('breakdown-list');
+            list.innerHTML = '';
+            let total = 0;
+
+            BREAKDOWN.forEach((b, qIdx) => {
+                const userIdx = state.answers[qIdx];
+                const userPoints = userIdx !== null ? QUESTIONS[qIdx].answers[userIdx].points : 1;
+                const gap = 3 - userPoints; // 0, 1, or 2
+                const monthlyLoss = gap * b.lossPerGap;
+                total += monthlyLoss;
+
+                // Status pill + colour by gap size
+                let statusLabel, statusClass, barClass, barPct;
+                if (gap === 0) {
+                    statusLabel = 'Optimeret';
+                    statusClass = 'bg-emerald-100 text-emerald-700';
+                    barClass = 'bg-emerald-500';
+                    barPct = 100;
+                } else if (gap === 1) {
+                    statusLabel = 'Delvist';
+                    statusClass = 'bg-amber-100 text-amber-700';
+                    barClass = 'bg-amber-500';
+                    barPct = 60;
+                } else {
+                    statusLabel = 'Forbedringspotentiale';
+                    statusClass = 'bg-accent-100 text-accent-700';
+                    barClass = 'bg-accent-500';
+                    barPct = 25;
+                }
+
+                const row = document.createElement('details');
+                row.className = 'group';
+                row.innerHTML = `
+                    <summary class="list-none cursor-pointer px-5 sm:px-6 py-4 hover:bg-brand-50/60 transition flex items-center justify-between gap-4">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap mb-2">
+                                <p class="font-semibold text-brand-900">${b.label}</p>
+                                <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${statusClass}">${statusLabel}</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-brand-100 rounded-full overflow-hidden">
+                                <div class="h-full ${barClass} rounded-full" style="width: ${barPct}%"></div>
+                            </div>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <p class="text-sm font-bold ${monthlyLoss > 0 ? 'text-accent-600' : 'text-emerald-600'}">
+                                ${monthlyLoss > 0 ? '−' + formatDKK(monthlyLoss) + ' kr' : '0 kr'}
+                            </p>
+                            <p class="text-[10px] uppercase tracking-wider text-brand-400">per måned</p>
+                        </div>
+                        <svg class="w-4 h-4 text-brand-400 flex-shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                    </summary>
+                    <div class="px-5 sm:px-6 pb-5 pt-1 bg-brand-50/40">
+                        <div class="grid sm:grid-cols-3 gap-3 text-xs mb-3">
+                            <div class="bg-white border border-brand-100 rounded-lg p-3">
+                                <p class="text-brand-400 uppercase tracking-wider mb-1">Din score</p>
+                                <p class="font-bold text-brand-900">${userPoints} / 3</p>
+                            </div>
+                            <div class="bg-white border border-brand-100 rounded-lg p-3">
+                                <p class="text-brand-400 uppercase tracking-wider mb-1">Gap til optimum</p>
+                                <p class="font-bold text-brand-900">${gap} trin</p>
+                            </div>
+                            <div class="bg-white border border-brand-100 rounded-lg p-3">
+                                <p class="text-brand-400 uppercase tracking-wider mb-1">Tab/md</p>
+                                <p class="font-bold ${monthlyLoss > 0 ? 'text-accent-600' : 'text-emerald-600'}">${formatDKK(monthlyLoss)} kr</p>
+                            </div>
+                        </div>
+                        <p class="text-xs font-semibold text-brand-500 uppercase tracking-wider mb-1">Sådan regner vi</p>
+                        <p class="text-sm text-brand-700 leading-relaxed">${b.calc}</p>
+                    </div>
+                `;
+                list.appendChild(row);
+            });
+
+            $('breakdown-total').textContent  = '−' + formatDKK(total);
+            $('breakdown-total-2').textContent = formatDKK(total);
+        }
+
+        // ---------- CUSTOMER CASES RENDERING ----------
+        function renderCases() {
+            const list = $('case-list');
+            list.innerHTML = '';
+            CASES.forEach(c => {
+                const item = document.createElement('details');
+                item.className = 'group bg-white border border-brand-200 rounded-xl overflow-hidden hover:border-brand-400 hover:shadow-lg transition';
+                item.innerHTML = `
+                    <summary class="list-none cursor-pointer p-5 sm:p-6 flex items-start gap-4">
+                        <div class="flex-shrink-0 w-11 h-11 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-brand-900">${c.company}</p>
+                            <p class="text-xs text-brand-500 mb-2">${c.segment}</p>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent-100 text-accent-700">${c.accent}</span>
+                                <span class="text-xs text-brand-600">${c.journey}</span>
+                            </div>
+                        </div>
+                        <svg class="w-5 h-5 text-brand-400 flex-shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                    </summary>
+                    <div class="px-5 sm:px-6 pb-6 pt-1 border-t border-brand-100 bg-brand-50/40">
+                        <div class="grid sm:grid-cols-3 gap-3 my-4">
+                            ${c.metrics.map(m => `
+                                <div class="bg-white border border-brand-100 rounded-lg p-3 text-center">
+                                    <p class="text-2xl font-extrabold text-accent-600">${m.value}</p>
+                                    <p class="text-xs text-brand-500 mt-1">${m.label}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div>
+                                <p class="text-xs font-bold text-brand-500 uppercase tracking-wider mb-1">Udfordring</p>
+                                <p class="text-brand-700 leading-relaxed">${c.challenge}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-brand-500 uppercase tracking-wider mb-1">Løsning</p>
+                                <p class="text-brand-700 leading-relaxed">${c.solution}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-brand-500 uppercase tracking-wider mb-1">Resultat</p>
+                                <p class="text-brand-700 leading-relaxed">${c.result}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // Toggle handler for the breakdown panel
+        function toggleBreakdown() {
+            const body = $('breakdown-body');
+            const chev = $('breakdown-chevron');
+            const isHidden = body.classList.contains('hidden');
+            body.classList.toggle('hidden');
+            chev.classList.toggle('rotate-180', isHidden);
         }
 
         async function logResult(score, cat) {
@@ -587,6 +851,7 @@
         });
         $('btn-next').addEventListener('click', next);
         $('btn-prev').addEventListener('click', prev);
+        $('btn-toggle-breakdown').addEventListener('click', toggleBreakdown);
 
         $('btn-restart').addEventListener('click', () => {
             state.currentQ = 0;
