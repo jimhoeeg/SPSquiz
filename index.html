@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LEAN Modenhedstest - Scandinavia Paint Solution</title>
+    <meta name="description" content="Test dit autolakvaerksteds LEAN-modenhed og faa et estimat paa dit oekonomiske potentiale." />
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Font: Inter for a clean, modern B2B feel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <script>
+        // Extend Tailwind with the SPS-inspired brand palette
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        // Deep, trustworthy navy/slate for the B2B base
+                        brand: {
+                            50:  '#f4f7fb',
+                            100: '#e6edf5',
+                            200: '#c6d4e6',
+                            300: '#9bb1cf',
+                            400: '#6987b1',
+                            500: '#456997',
+                            600: '#34547d',
+                            700: '#2b4565',
+                            800: '#1f3149',
+                            900: '#142235',
+                            950: '#0a1424',
+                        },
+                        // Energetic accent (matches the red curve in the SPS logo)
+                        accent: {
+                            50:  '#fdf3f1',
+                            100: '#fbe0db',
+                            200: '#f6bcb1',
+                            300: '#ef8e7d',
+                            400: '#e35f4a',
+                            500: '#cf4530',
+                            600: '#b53623',
+                            700: '#94291a',
+                            800: '#7a2418',
+                            900: '#65221a',
+                        },
+                    },
+                    boxShadow: {
+                        card: '0 20px 50px -20px rgba(20, 34, 53, 0.35)',
+                    },
+                },
+            },
+        };
+    </script>
+
+    <style>
+        html, body { font-family: 'Inter', system-ui, sans-serif; }
+
+        /* Subtle, premium background pattern */
+        body {
+            background-color: #f4f7fb;
+            background-image:
+                radial-gradient(at 10% 0%, rgba(52, 84, 125, 0.08) 0px, transparent 50%),
+                radial-gradient(at 90% 100%, rgba(207, 69, 48, 0.06) 0px, transparent 50%);
+            min-height: 100vh;
+        }
+
+        /* Step transition animation */
+        .step { animation: fadeUp 0.4s ease-out both; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Answer card hover/selected polish */
+        .answer-card {
+            transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease;
+        }
+        .answer-card:hover {
+            transform: translateY(-2px);
+            border-color: #34547d;
+            box-shadow: 0 12px 30px -12px rgba(20, 34, 53, 0.25);
+        }
+        .answer-card.selected {
+            border-color: #cf4530;
+            background-color: #fdf3f1;
+            box-shadow: 0 12px 30px -10px rgba(207, 69, 48, 0.35);
+        }
+        .answer-letter {
+            transition: background-color 180ms ease, color 180ms ease;
+        }
+        .answer-card.selected .answer-letter {
+            background-color: #cf4530;
+            color: #ffffff;
+        }
+
+        /* Progress bar fill */
+        .progress-fill { transition: width 400ms cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Hide screens by default; JS toggles .active */
+        .screen { display: none; }
+        .screen.active { display: block; }
+    </style>
+</head>
+<body class="text-brand-900">
+
+    <!-- ============================== HEADER ============================== -->
+    <header class="border-b border-brand-100 bg-white/80 backdrop-blur sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <!-- Inline SPS-style swirl logo -->
+                <svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true">
+                    <g fill="none" stroke-width="10" stroke-linecap="round">
+                        <path d="M50 10 A40 40 0 0 1 90 50" stroke="#d9b441" />
+                        <path d="M90 50 A40 40 0 0 1 50 90" stroke="#cf4530" />
+                        <path d="M50 90 A40 40 0 0 1 10 50" stroke="#34547d" />
+                        <path d="M10 50 A40 40 0 0 1 50 10" stroke="#9ec48a" />
+                    </g>
+                    <text x="50" y="58" text-anchor="middle" font-family="Inter, sans-serif" font-weight="700" font-size="22" fill="#34547d">sPs</text>
+                </svg>
+                <div class="leading-tight">
+                    <p class="text-sm font-semibold text-brand-800">Scandinavia Paint Solution</p>
+                    <p class="text-xs text-brand-500 hidden sm:block">Specialister i overfladebehandling</p>
+                </div>
+            </div>
+            <span class="hidden md:inline-flex items-center gap-2 text-xs font-medium text-brand-600 uppercase tracking-wider">
+                <span class="w-2 h-2 rounded-full bg-accent-500"></span>
+                LEAN Modenhedstest
+            </span>
+        </div>
+    </header>
+
+    <!-- ============================== MAIN ============================== -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+
+        <!-- ============================== INTRO SCREEN ============================== -->
+        <section id="screen-intro" class="screen active">
+            <div class="bg-white rounded-2xl shadow-card border border-brand-100 overflow-hidden">
+                <div class="bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 px-8 py-12 sm:px-12 sm:py-16 text-white">
+                    <span class="inline-block text-xs font-semibold uppercase tracking-widest text-accent-300 mb-4">For autolakvaerksteder & skadecentre</span>
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight mb-4">
+                        Hvor meget koster<br />
+                        <span class="text-accent-400">skjult spildtid</span> dit vaerksted?
+                    </h1>
+                    <p class="text-brand-100 text-base sm:text-lg max-w-2xl">
+                        Tag den 2-minutters LEAN-modenhedstest og faa et konkret estimat paa det oekonomiske potentiale, der ligger gemt i dine processer &mdash; baseret paa de syv klassiske LEAN-spildtyper i en moderne skadestyring.
+                    </p>
+                </div>
+
+                <div class="px-8 py-10 sm:px-12 sm:py-12">
+                    <div class="grid sm:grid-cols-3 gap-6 mb-10">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center font-bold">1</div>
+                            <div>
+                                <p class="font-semibold text-brand-900">7 spoergsmaal</p>
+                                <p class="text-sm text-brand-500">Hurtigt og fokuseret</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center font-bold">2</div>
+                            <div>
+                                <p class="font-semibold text-brand-900">LEAN-score</p>
+                                <p class="text-sm text-brand-500">Din modenhed sort paa hvidt</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center font-bold">3</div>
+                            <div>
+                                <p class="font-semibold text-brand-900">Oekonomisk rapport</p>
+                                <p class="text-sm text-brand-500">Konkret tabt daekningsbidrag</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="btn-start" type="button"
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-accent-500 hover:bg-accent-600 active:bg-accent-700 text-white font-semibold rounded-xl shadow-lg shadow-accent-500/20 transition focus:outline-none focus:ring-4 focus:ring-accent-200">
+                        Start Testen
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                    </button>
+                    <p class="text-xs text-brand-500 mt-4">Tager ca. 2 minutter &middot; 100% fortroligt</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================== QUESTIONS SCREEN ============================== -->
+        <section id="screen-questions" class="screen">
+            <div class="bg-white rounded-2xl shadow-card border border-brand-100 overflow-hidden">
+
+                <!-- Progress -->
+                <div class="px-6 sm:px-10 pt-6 sm:pt-8">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-brand-500">
+                            Spoergsmaal <span id="q-current">1</span> af <span id="q-total">7</span>
+                        </p>
+                        <p id="q-tag" class="text-xs font-semibold text-accent-600 uppercase tracking-wider"></p>
+                    </div>
+                    <div class="w-full h-2 bg-brand-100 rounded-full overflow-hidden">
+                        <div id="progress-fill" class="progress-fill h-full bg-gradient-to-r from-brand-700 to-accent-500 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Question body -->
+                <div class="px-6 sm:px-10 py-8 sm:py-10">
+                    <h2 id="q-title" class="text-2xl sm:text-3xl font-bold text-brand-900 mb-2"></h2>
+                    <p id="q-subtitle" class="text-sm text-brand-500 mb-8"></p>
+
+                    <div id="answers" class="space-y-3" role="radiogroup"></div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="px-6 sm:px-10 pb-8 flex items-center justify-between gap-4 border-t border-brand-100 pt-6">
+                    <button id="btn-prev" type="button"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 text-brand-600 hover:text-brand-900 font-medium rounded-lg hover:bg-brand-50 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12" /></svg>
+                        Tilbage
+                    </button>
+                    <button id="btn-next" type="button" disabled
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-brand-800 hover:bg-brand-900 text-white font-semibold rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-4 focus:ring-brand-200">
+                        <span id="btn-next-label">Naeste</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================== LEAD GEN SCREEN ============================== -->
+        <section id="screen-lead" class="screen">
+            <div class="bg-white rounded-2xl shadow-card border border-brand-100 overflow-hidden">
+                <div class="bg-gradient-to-br from-brand-900 to-brand-700 px-8 py-10 sm:px-12 text-white">
+                    <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-accent-300 mb-3">
+                        <span class="w-2 h-2 rounded-full bg-accent-400"></span>
+                        Sidste skridt
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold mb-2">Beregn min LEAN-score &amp; oekonomiske rapport</h2>
+                    <p class="text-brand-100">Indtast dine oplysninger, og vi sender din personlige rapport sammen med konkrete forbedringsforslag.</p>
+                </div>
+
+                <form id="lead-form" class="px-8 py-10 sm:px-12 grid sm:grid-cols-2 gap-5" novalidate>
+                    <div class="sm:col-span-1">
+                        <label for="lead-name" class="block text-sm font-semibold text-brand-800 mb-1.5">Navn <span class="text-accent-500">*</span></label>
+                        <input id="lead-name" name="name" type="text" required autocomplete="name"
+                            class="w-full px-4 py-3 border border-brand-200 rounded-lg focus:outline-none focus:border-accent-500 focus:ring-4 focus:ring-accent-100 transition" />
+                    </div>
+                    <div class="sm:col-span-1">
+                        <label for="lead-company" class="block text-sm font-semibold text-brand-800 mb-1.5">Virksomhed <span class="text-accent-500">*</span></label>
+                        <input id="lead-company" name="company" type="text" required autocomplete="organization"
+                            class="w-full px-4 py-3 border border-brand-200 rounded-lg focus:outline-none focus:border-accent-500 focus:ring-4 focus:ring-accent-100 transition" />
+                    </div>
+                    <div class="sm:col-span-1">
+                        <label for="lead-email" class="block text-sm font-semibold text-brand-800 mb-1.5">E-mail <span class="text-accent-500">*</span></label>
+                        <input id="lead-email" name="email" type="email" required autocomplete="email"
+                            class="w-full px-4 py-3 border border-brand-200 rounded-lg focus:outline-none focus:border-accent-500 focus:ring-4 focus:ring-accent-100 transition" />
+                    </div>
+                    <div class="sm:col-span-1">
+                        <label for="lead-phone" class="block text-sm font-semibold text-brand-800 mb-1.5">Telefonnummer <span class="text-accent-500">*</span></label>
+                        <input id="lead-phone" name="phone" type="tel" required autocomplete="tel"
+                            class="w-full px-4 py-3 border border-brand-200 rounded-lg focus:outline-none focus:border-accent-500 focus:ring-4 focus:ring-accent-100 transition" />
+                    </div>
+
+                    <p id="lead-error" class="sm:col-span-2 text-sm text-accent-600 hidden">Udfyld venligst alle felter korrekt.</p>
+
+                    <div class="sm:col-span-2 pt-2">
+                        <button type="submit"
+                            class="w-full inline-flex items-center justify-center gap-2 px-8 py-4 bg-accent-500 hover:bg-accent-600 active:bg-accent-700 text-white font-semibold rounded-xl shadow-lg shadow-accent-500/20 transition focus:outline-none focus:ring-4 focus:ring-accent-200">
+                            Beregn min LEAN-score og oekonomiske rapport
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                        <p class="text-xs text-brand-500 mt-3 text-center">Vi behandler dine oplysninger fortroligt jf. vores privatlivspolitik.</p>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ============================== RESULTS SCREEN ============================== -->
+        <section id="screen-results" class="screen">
+            <div class="bg-white rounded-2xl shadow-card border border-brand-100 overflow-hidden">
+
+                <!-- Score banner -->
+                <div class="bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 px-8 py-10 sm:px-12 sm:py-14 text-white">
+                    <span class="inline-block text-xs font-semibold uppercase tracking-widest text-accent-300 mb-3">Din LEAN-modenhed</span>
+                    <h2 id="result-title" class="text-3xl sm:text-4xl font-extrabold mb-4"></h2>
+                    <div class="flex items-end gap-4 mb-2">
+                        <div>
+                            <p class="text-sm text-brand-200 uppercase tracking-wider mb-1">Score</p>
+                            <p class="text-5xl sm:text-6xl font-extrabold leading-none">
+                                <span id="result-score">0</span><span class="text-brand-300 text-3xl font-bold"> / 21</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-5 max-w-md">
+                        <div class="w-full h-2.5 bg-brand-950/50 rounded-full overflow-hidden">
+                            <div id="result-bar" class="h-full bg-gradient-to-r from-accent-400 to-accent-500 rounded-full transition-all duration-700" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sections -->
+                <div class="px-8 py-10 sm:px-12 space-y-8">
+
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8v8m0 0v2m0-10V6m9 6a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <h3 class="text-lg font-bold text-brand-900">Oekonomisk realitet</h3>
+                        </div>
+                        <p id="result-finance" class="text-brand-700 leading-relaxed"></p>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            <h3 class="text-lg font-bold text-brand-900">Forbedringsforslag</h3>
+                        </div>
+                        <p id="result-suggestion" class="text-brand-700 leading-relaxed"></p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-brand-50 to-accent-50 border border-accent-100 rounded-xl p-6 sm:p-8">
+                        <p id="result-cta-text" class="text-brand-800 leading-relaxed mb-5"></p>
+                        <a id="result-cta-btn" href="#" target="_blank" rel="noopener"
+                           class="inline-flex items-center gap-2 px-7 py-4 bg-accent-500 hover:bg-accent-600 active:bg-accent-700 text-white font-semibold rounded-xl shadow-lg shadow-accent-500/20 transition focus:outline-none focus:ring-4 focus:ring-accent-200">
+                            Book en uforpligtende 30-minutters gennemgang
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        </a>
+                    </div>
+
+                    <button id="btn-restart" type="button"
+                        class="text-sm font-semibold text-brand-600 hover:text-accent-600 transition">
+                        &larr; Tag testen igen
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================== FOOTER ============================== -->
+    <footer class="border-t border-brand-100 bg-white mt-12">
+        <div class="max-w-5xl mx-auto px-6 py-8 text-sm text-brand-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p>&copy; <span id="year"></span> Scandinavia Paint Solution &middot; Specialister i overfladebehandling</p>
+            <p class="text-xs">LEAN Modenhedstest v1.0</p>
+        </div>
+    </footer>
+
+    <!-- ============================== APP SCRIPT ============================== -->
+    <script>
+    (function () {
+        'use strict';
+
+        // ---------- QUIZ DATA ----------
+        const QUESTIONS = [
+            {
+                tag: 'LEAN: Overlager',
+                title: 'Lagerstyring',
+                subtitle: 'Hvordan styrer I forbruget af lak og materialer?',
+                answers: [
+                    { text: 'Manuelt og visuelt. Vi bestiller, naar hylden ser tom ud.', points: 1 },
+                    { text: 'Vi scanner stregkoder ved genbestilling, men sporer ikke forbruget per gram paa ordren.', points: 2 },
+                    { text: '100% automatisk via vores IT-system. Vi kender materialeforbruget ned til grammet.', points: 3 },
+                ],
+            },
+            {
+                tag: 'LEAN: Ventetid',
+                title: 'Tidsregistrering',
+                subtitle: 'Hvordan registrerer I tidsforbrug paa opgaverne?',
+                answers: [
+                    { text: 'Svendene skriver timer paa en timeseddel i haanden sidst paa dagen.', points: 1 },
+                    { text: 'Vi har et digitalt stempelur ved indgangen, men maaler ikke tid paa de enkelte processer.', points: 2 },
+                    { text: 'Digital tidsregistrering sker live paa skaerme ved hver proces (klargoering, sproejtning, toerring).', points: 3 },
+                ],
+            },
+            {
+                tag: 'LEAN: Unoedig proces',
+                title: 'Energiforbrug i kabinen',
+                subtitle: 'Hvordan optimerer I drift og energi i lakkabinen?',
+                answers: [
+                    { text: 'Vi koerer med vores faste laksystem og temperaturer, som vi altid har gjort.', points: 1 },
+                    { text: 'Vi forsoeger at pulje bilerne manuelt, men det skaber ofte logistisk ventetid.', points: 2 },
+                    { text: 'Vi bruger ultra-hurtigttoerrende laksystemer (low-bake) styret af digital planlaegning.', points: 3 },
+                ],
+            },
+            {
+                tag: 'LEAN: Defekter',
+                title: 'Fejl & om-arbejde',
+                subtitle: 'Hvordan haandterer I fejl og om-arbejde paa bilerne?',
+                answers: [
+                    { text: 'Vi fikser fejlene loebende. Det betragtes som en uundgaaelig del af haandvaerket.', points: 1 },
+                    { text: 'Vi registrerer, at en bil skal laves om, men opsamler ikke data paa aarsagen eller oekonomien.', points: 2 },
+                    { text: 'Alle fejl og om-arbejdstimer logges digitalt, saa vi systematisk kan fjerne aarsagerne.', points: 3 },
+                ],
+            },
+            {
+                tag: 'LEAN: Overadministration',
+                title: 'Dokumentation og forsikring',
+                subtitle: 'Hvordan dokumenterer I arbejdet overfor forsikringsselskaberne?',
+                answers: [
+                    { text: 'Manuelt og tungt. Vi tager billeder med telefonen og bruger meget tid foran computeren.', points: 1 },
+                    { text: 'Vi uploader manuelt til forsikringssystemer, men det er adskilt fra vores vaerkstedsstyring.', points: 2 },
+                    { text: 'Alt dokumenteres loebende med billeder og procesdata direkte i det digitale ordreflow.', points: 3 },
+                ],
+            },
+            {
+                tag: 'LEAN: Unoedig bevaegelse',
+                title: 'Organisering af vaerktoej & udstyr',
+                subtitle: 'Hvordan er vaerkstedet organiseret i hverdagen?',
+                answers: [
+                    { text: 'Svendene har deres egne systemer, og vi bruger ofte tid paa at lede efter udstyr eller reservedele.', points: 1 },
+                    { text: 'Vi har faste pladser til det meste, men oprydning og vedligeholdelse sejler i spidsbelastninger.', points: 2 },
+                    { text: 'Vi foelger faste LEAN-standarder (f.eks. 5S). Alt har en fast, visuel plads, hvilket minimerer soegetid.', points: 3 },
+                ],
+            },
+            {
+                tag: 'Det Digitale Salg',
+                title: 'Pipeline og tilbudsopfoelgning',
+                subtitle: 'Hvordan haandterer I tilbud og opfoelgning?',
+                answers: [
+                    { text: 'Vi giver tilbud paa mail eller telefon, men foelger sjaeldent systematisk op.', points: 1 },
+                    { text: 'Vi skriver tilbud i vores system, men opfoelgningen afhaenger af, om mester lige har tid.', points: 2 },
+                    { text: 'Alle tilbud ligger i et digitalt system, som automatisk minder os om opfoelgning, saa ingen ordrer tabes.', points: 3 },
+                ],
+            },
+        ];
+
+        // Score categories
+        const CATEGORIES = [
+            {
+                min: 7, max: 11,
+                title: 'Den Traditionelle Lakmester',
+                finance: 'Dit vaerksted taber anslaaet 8.000 - 15.000 kr. om maaneden per svend paa skjult spildtid, manuel administration og unoedigt energiforbrug.',
+                suggestion: 'Ved at digitalisere din lager- og tidsstyring kan du reducere spildtid med op til 20%. Det frigoer timer, der kan faktureres direkte til kunderne.',
+                ctaText: 'Lad os hjaelpe dig med at stoppe det oekonomiske hul. Book en uforpligtende 30-minutters gennemgang, hvor vi regner paa dit praecise potentiale.',
+            },
+            {
+                min: 12, max: 17,
+                title: 'Den Digitale Udfordrer',
+                finance: 'Du har fat i det rigtige, men manglende integration mellem dine systemer koster dig anslaaet 50.000 - 100.000 kr. om aaret i tabt daekningsbidrag paa grund af dobbeltkonferering og uoptimeret kabinedrift.',
+                suggestion: 'Du skal binde dine "oeer af data" sammen. Ved at integrere dit laksystem med dit planlaegningsvaerktoej (f.eks. ProcessManager), fjerner du de sidste flaskehalse.',
+                ctaText: 'Du er taet paa maalstregen. Lad os vise dig, hvordan en fuld digital integration kan optimere din kapacitet og oege din overskudsgrad med 3-5%.',
+            },
+            {
+                min: 18, max: 21,
+                title: 'Det Fremtidssikrede Skadecenter',
+                finance: 'Flot! Du driver en sund forretning med hoej LEAN-standard. Dine optimeringsmuligheder ligger i de smaa marginaler, som kan oege din konkurrenceevne, naar du byder paa store flaade- og forsikringsaftaler.',
+                suggestion: 'Fokuser paa fuldautomatisk lagerstyring (VMI) og groen dokumentation af dit CO2-aftryk per lakering - det bliver et lovkrav og et vigtigt salgsparameter i fremtiden.',
+                ctaText: 'Som frontloeber inviterer vi dig til en strategisk dialog om, hvordan du bruger dine procesdata til at vinde stoerre markedsandele.',
+            },
+        ];
+
+        // Optional: replace with your webhook (Make / Zapier / Formspree)
+        const WEBHOOK_URL = ''; // e.g. 'https://hook.eu1.make.com/xxxx'
+        // CTA destination (booking link)
+        const BOOKING_URL = 'mailto:kontakt@scandinaviapaintsolution.dk?subject=Booking%20af%2030%20min.%20LEAN-gennemgang';
+
+        // ---------- STATE ----------
+        const state = {
+            currentQ: 0,
+            answers: new Array(QUESTIONS.length).fill(null), // index of chosen answer
+            lead: null,
+        };
+
+        // ---------- DOM HELPERS ----------
+        const $ = (id) => document.getElementById(id);
+        const screens = {
+            intro:     $('screen-intro'),
+            questions: $('screen-questions'),
+            lead:      $('screen-lead'),
+            results:   $('screen-results'),
+        };
+        function showScreen(name) {
+            Object.values(screens).forEach(s => s.classList.remove('active'));
+            screens[name].classList.add('active');
+            // Animate the active screen
+            screens[name].classList.remove('step');
+            void screens[name].offsetWidth; // reflow to restart animation
+            screens[name].classList.add('step');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ---------- RENDER QUESTION ----------
+        function renderQuestion() {
+            const q = QUESTIONS[state.currentQ];
+            $('q-current').textContent = state.currentQ + 1;
+            $('q-total').textContent = QUESTIONS.length;
+            $('q-tag').textContent = q.tag;
+            $('q-title').textContent = q.title;
+            $('q-subtitle').textContent = q.subtitle;
+
+            // Progress bar (advance proportionally)
+            const pct = ((state.currentQ) / QUESTIONS.length) * 100;
+            $('progress-fill').style.width = pct + '%';
+
+            // Render answers
+            const answersEl = $('answers');
+            answersEl.innerHTML = '';
+            q.answers.forEach((a, i) => {
+                const selected = state.answers[state.currentQ] === i;
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'answer-card w-full text-left flex items-start gap-4 p-5 bg-white border-2 border-brand-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent-100' + (selected ? ' selected' : '');
+                card.setAttribute('role', 'radio');
+                card.setAttribute('aria-checked', selected ? 'true' : 'false');
+                card.innerHTML = `
+                    <span class="answer-letter flex-shrink-0 w-9 h-9 rounded-lg bg-brand-100 text-brand-700 font-bold flex items-center justify-center">${String.fromCharCode(65 + i)}</span>
+                    <span class="text-brand-800 leading-relaxed pt-1">${a.text}</span>
+                `;
+                card.addEventListener('click', () => selectAnswer(i));
+                answersEl.appendChild(card);
+            });
+
+            // Buttons
+            $('btn-prev').disabled = state.currentQ === 0;
+            const hasAnswer = state.answers[state.currentQ] !== null;
+            $('btn-next').disabled = !hasAnswer;
+            $('btn-next-label').textContent = (state.currentQ === QUESTIONS.length - 1) ? 'Se min score' : 'Naeste';
+        }
+
+        function selectAnswer(idx) {
+            state.answers[state.currentQ] = idx;
+            renderQuestion();
+        }
+
+        function next() {
+            if (state.answers[state.currentQ] === null) return;
+            if (state.currentQ < QUESTIONS.length - 1) {
+                state.currentQ += 1;
+                renderQuestion();
+            } else {
+                // Last question answered -> go to lead form
+                // Finalize progress bar
+                $('progress-fill').style.width = '100%';
+                showScreen('lead');
+            }
+        }
+
+        function prev() {
+            if (state.currentQ > 0) {
+                state.currentQ -= 1;
+                renderQuestion();
+            }
+        }
+
+        // ---------- SCORE ----------
+        function calculateScore() {
+            return state.answers.reduce((sum, idx, qIdx) => {
+                if (idx === null) return sum;
+                return sum + QUESTIONS[qIdx].answers[idx].points;
+            }, 0);
+        }
+
+        function findCategory(score) {
+            return CATEGORIES.find(c => score >= c.min && score <= c.max) || CATEGORIES[0];
+        }
+
+        // ---------- RESULTS ----------
+        function showResults() {
+            const score = calculateScore();
+            const cat = findCategory(score);
+
+            $('result-title').textContent = cat.title;
+            $('result-score').textContent = score;
+            $('result-finance').textContent = cat.finance;
+            $('result-suggestion').textContent = cat.suggestion;
+            $('result-cta-text').textContent = cat.ctaText;
+            $('result-cta-btn').href = BOOKING_URL;
+
+            // Fill the score bar (out of max 21)
+            const pct = Math.round((score / 21) * 100);
+            // small delay so the transition is visible after the screen fades in
+            setTimeout(() => { $('result-bar').style.width = pct + '%'; }, 100);
+
+            showScreen('results');
+        }
+
+        // ---------- LEAD SUBMISSION ----------
+        function validateLead(data) {
+            if (!data.name.trim() || !data.company.trim() || !data.phone.trim()) return false;
+            const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRe.test(data.email.trim());
+        }
+
+        async function submitLead(data) {
+            // Always log to console - prepared for webhook hand-off
+            const score = calculateScore();
+            const cat = findCategory(score);
+            const payload = {
+                lead: data,
+                score,
+                category: cat.title,
+                answers: state.answers.map((idx, qIdx) => ({
+                    question: QUESTIONS[qIdx].title,
+                    answer: idx !== null ? QUESTIONS[qIdx].answers[idx].text : null,
+                    points: idx !== null ? QUESTIONS[qIdx].answers[idx].points : 0,
+                })),
+                submittedAt: new Date().toISOString(),
+                source: 'SPS LEAN Modenhedstest',
+            };
+
+            console.log('[SPS Quiz] Lead submission:', payload);
+
+            // Optional webhook (Make / Zapier / Formspree). Failures don't block the user.
+            if (WEBHOOK_URL) {
+                try {
+                    await fetch(WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                } catch (err) {
+                    console.warn('[SPS Quiz] Webhook submission failed:', err);
+                }
+            }
+        }
+
+        // ---------- EVENT WIRING ----------
+        $('btn-start').addEventListener('click', () => {
+            showScreen('questions');
+            renderQuestion();
+        });
+        $('btn-next').addEventListener('click', next);
+        $('btn-prev').addEventListener('click', prev);
+
+        $('lead-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name:    $('lead-name').value,
+                company: $('lead-company').value,
+                email:   $('lead-email').value,
+                phone:   $('lead-phone').value,
+            };
+            if (!validateLead(data)) {
+                $('lead-error').classList.remove('hidden');
+                return;
+            }
+            $('lead-error').classList.add('hidden');
+            state.lead = data;
+
+            // Disable submit while "processing"
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = 'Beregner din rapport...';
+
+            await submitLead(data);
+
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+
+            showResults();
+        });
+
+        $('btn-restart').addEventListener('click', () => {
+            state.currentQ = 0;
+            state.answers = new Array(QUESTIONS.length).fill(null);
+            state.lead = null;
+            $('lead-form').reset();
+            $('progress-fill').style.width = '0%';
+            $('result-bar').style.width = '0%';
+            showScreen('intro');
+        });
+
+        // Footer year
+        $('year').textContent = new Date().getFullYear();
+
+        // Keyboard: ArrowRight to advance when an answer is chosen, ArrowLeft to go back
+        document.addEventListener('keydown', (e) => {
+            if (!screens.questions.classList.contains('active')) return;
+            if (e.key === 'ArrowRight' && !$('btn-next').disabled) next();
+            if (e.key === 'ArrowLeft'  && !$('btn-prev').disabled) prev();
+        });
+    })();
+    </script>
+</body>
+</html>
